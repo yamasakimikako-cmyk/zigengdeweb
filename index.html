@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>我的项目</title>
+  <style>
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #0f0f10;
+      color: #fff;
+      line-height: 1.6;
+    }
+
+    .wrap {
+      width: min(1100px, calc(100% - 40px));
+      margin: 0 auto;
+      padding: 48px 0 80px;
+    }
+
+    h1 {
+      margin: 0 0 12px;
+      font-size: 42px;
+      line-height: 1.1;
+    }
+
+    .desc {
+      margin: 0 0 28px;
+      color: #b8b8b8;
+      font-size: 16px;
+    }
+
+    .status {
+      margin: 0 0 24px;
+      color: #9a9a9a;
+      font-size: 14px;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 24px;
+    }
+
+    .card {
+      background: #18181a;
+      border: 1px solid #2b2b2f;
+      border-radius: 18px;
+      overflow: hidden;
+      box-shadow: 0 8px 30px rgba(0,0,0,0.18);
+    }
+
+    .cover {
+      width: 100%;
+      aspect-ratio: 16 / 10;
+      object-fit: cover;
+      display: block;
+      background: #101012;
+    }
+
+    .card-body {
+      padding: 20px;
+    }
+
+    .meta {
+      color: #8f8f95;
+      font-size: 12px;
+      margin-bottom: 8px;
+    }
+
+    .title {
+      margin: 0 0 8px;
+      font-size: 24px;
+      line-height: 1.2;
+    }
+
+    .subtitle {
+      margin: 0 0 12px;
+      color: #cfcfd4;
+      font-size: 15px;
+    }
+
+    .body {
+      margin: 0;
+      color: #b5b5bb;
+      font-size: 14px;
+      white-space: pre-wrap;
+    }
+
+    .empty,
+    .error {
+      border: 1px dashed #333;
+      border-radius: 16px;
+      padding: 28px;
+      color: #b5b5bb;
+      background: #171719;
+    }
+
+    .error {
+      border-color: #6a2f2f;
+      color: #ffb8b8;
+    }
+
+    @media (max-width: 900px) {
+      .grid {
+        grid-template-columns: 1fr;
+      }
+
+      h1 {
+        font-size: 34px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>我的项目</h1>
+    <p class="desc">这里会自动读取后台已发布内容。</p>
+    <p class="status" id="statusText">正在加载…</p>
+
+    <main id="projectContainer">
+      <div class="empty">正在读取后台数据…</div>
+    </main>
+  </div>
+
+  <script type="module">
+    import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+
+    const SUPABASE_URL = 'https://iqiqfaushblbfiuqidye.supabase.co';
+    const SUPABASE_KEY = 'sb_publishable_TVGrA4-n2Q9MqeYNiuFfXw_bSO6Efc0';
+
+    const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
+
+    const projectContainer = document.getElementById('projectContainer');
+    const statusText = document.getElementById('statusText');
+
+    function escapeHtml(str = '') {
+      return String(str)
+        .replaceAll('&', '&amp;')
+        .replaceAll('<', '&lt;')
+        .replaceAll('>', '&gt;')
+        .replaceAll('"', '&quot;')
+        .replaceAll("'", '&#39;');
+    }
+
+    function renderEmpty(text) {
+      projectContainer.innerHTML = `<div class="empty">${escapeHtml(text)}</div>`;
+    }
+
+    function renderError(text) {
+      projectContainer.innerHTML = `<div class="error">${escapeHtml(text)}</div>`;
+    }
+
+    function renderProjects(items) {
+      if (!items || items.length === 0) {
+        renderEmpty('后台里还没有已发布内容。');
+        return;
+      }
+
+      const html = items.map(item => {
+        const title = escapeHtml(item.title || '未命名项目');
+        const subtitle = item.subtitle ? `<p class="subtitle">${escapeHtml(item.subtitle)}</p>` : '';
+        const body = item.body ? `<p class="body">${escapeHtml(item.body)}</p>` : '';
+        const cover = item.cover_url
+          ? `<img class="cover" src="${item.cover_url}" alt="${title}">`
+          : '';
+        const slug = item.slug ? `slug: ${escapeHtml(item.slug)}` : '未设置 slug';
+        const sortOrder = typeof item.sort_order === 'number' ? item.sort_order : 0;
+
+        return `
+          <article class="card">
+            ${cover}
+            <div class="card-body">
+              <div class="meta">${slug} · 排序 ${sortOrder}</div>
+              <h2 class="title">${title}</h2>
+              ${subtitle}
+              ${body}
+            </div>
+          </article>
+        `;
+      }).join('');
+
+      projectContainer.innerHTML = `<div class="grid">${html}</div>`;
+    }
+
+    async function loadProjects() {
+      statusText.textContent = '正在加载…';
+
+      const { data, error } = await supabase
+        .from('content_blocks')
+        .select('*')
+        .eq('is_published', true)
+        .order('sort_order', { ascending: true })
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        console.error(error);
+        statusText.textContent = '加载失败';
+        renderError(`读取失败：${error.message}`);
+        return;
+      }
+
+      statusText.textContent = `已加载 ${data.length} 条内容`;
+      renderProjects(data);
+    }
+
+    loadProjects();
+  </script>
+</body>
+</html>

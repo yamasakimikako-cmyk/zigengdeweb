@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Zigeng Zhang | Archive 2024-2026</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" />
+    <style>
+        :root { --bg: #000; --text: #fff; --font-mono: 'Courier New', Courier, monospace; }
+        body, html { margin: 0; padding: 0; background: var(--bg); color: var(--text); font-family: "Helvetica Neue", Arial, sans-serif; overflow: hidden; height: 100vh; touch-action: none; }
+        
+        /* 📱 手机端独占：红色温感画布 */
+        #thermalCanvas { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 0; pointer-events: none; display: none; }
+        @media (max-width: 768px) { #thermalCanvas { display: block; } }
+
+        /* 1. 个人信息栏 */
+        .header-info { position: fixed; top: 50px; left: 60px; z-index: 100; pointer-events: auto; }
+        .header-info h1 { font-size: 24px; margin: 0; letter-spacing: 2px; font-weight: 300; cursor: pointer; }
+        .mobile-info-btn { display: none; font-size: 11px; opacity: 0.5; border: 1px solid rgba(255,255,255,0.3); padding: 2px 8px; border-radius: 12px; margin-left: 10px; vertical-align: middle; }
+        .header-info .contact-box { font-family: var(--font-mono); font-size: 11px; margin-top: 25px; line-height: 1.8; opacity: 0.8; }
+
+        /* 2. 目录导航 (PC端) */
+        .side-nav { position: fixed; right: 60px; bottom: 60px; z-index: 100; text-align: right; }
+        .nav-item { font-family: var(--font-mono); font-size: 11px; margin: 12px 0; cursor: pointer; opacity: 0.2; transition: 0.4s; letter-spacing: 1px; white-space: nowrap; }
+        .nav-item.active { opacity: 1; text-decoration: underline; }
+
+        /* 3. 中央轮盘 */
+        .main-container { height: 100vh; display: flex; align-items: center; justify-content: center; z-index: 10; position: relative; }
+        .swiper { width: 100%; padding: 20px 0; perspective: 1200px; }
+        .swiper-slide {
+            width: 58vh; height: 58vh; background-color: #111; background-size: cover; background-position: center;
+            position: relative; cursor: pointer; box-shadow: 0 40px 80px rgba(0,0,0,0.8);
+            transition: 0.6s cubic-bezier(0.25, 1, 0.5, 1);
+        }
+        .swiper-slide::after {
+            content: ""; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(255, 255, 255, 0.02); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); transition: 0.8s;
+        }
+        .swiper-slide-active::after { backdrop-filter: blur(0px); -webkit-backdrop-filter: blur(0px); background: transparent; }
+
+        /* 4. 详情页与骨架屏 */
+        .project-modal { 
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
+            background: rgba(0,0,0,0.95); backdrop-filter: blur(30px); -webkit-backdrop-filter: blur(30px);
+            z-index: 1000; display: none; opacity: 0; transition: 0.5s; 
+            overflow-y: auto; padding: 120px 60px; box-sizing: border-box; 
+        }
+        .project-modal.active { display: block; opacity: 1; }
+        .close-btn { position: fixed; right: 60px; top: 60px; cursor: pointer; font-family: var(--font-mono); font-size: 11px; color: #fff; letter-spacing: 2px; z-index: 1001; }
+        
+        .modal-body { max-width: 900px; margin: 0 auto; }
+        .project-meta { font-family: var(--font-mono); font-size: 11px; opacity: 0.5; margin-bottom: 20px; text-transform: uppercase; }
+        .modal-body h2 { font-size: 26px; font-weight: 300; margin-bottom: 30px; }
+        .modal-body .description { line-height: 2.2; font-size: 14px; opacity: 0.8; margin-bottom: 80px; text-align: justify; white-space: pre-wrap; }
+
+        /* 骨架屏占位图容器 */
+        .img-container { position: relative; width: 100%; background: #0a0a0a; margin-bottom: 50px; overflow: hidden; min-height: 300px; }
+        .img-container::before {
+            content: ""; position: absolute; top: 0; left: -100%; width: 200%; height: 100%;
+            background: linear-gradient(90deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.02) 50%, rgba(255,255,255,0) 100%);
+            animation: shimmer 2.5s infinite;
+        }
+        @keyframes shimmer { to { transform: translateX(50%); } }
+        .modal-body img { width: 100%; display: block; opacity: 0; transition: opacity 1s cubic-bezier(0.4, 0, 0.2, 1); position: relative; z-index: 1; }
+        .modal-body img.loaded { opacity: 1; }
+
+        /* 📱 手机端适配 */
+        @media (max-width: 768px) {
+            .header-info { top: 30px; left: 25px; width: calc(100% - 50px); }
+            .mobile-info-btn { display: inline-block; }
+            .header-info .contact-box { 
+                display: none; padding: 25px; background: rgba(20, 20, 20, 0.95); 
+                border-radius: 12px; margin-top: 15px; border: 1px solid rgba(255,255,255,0.1);
+            }
+            .header-info.expanded .contact-box { display: block; animation: fadeIn 0.4s ease; }
+            .side-nav {
+                top: auto; bottom: 30px; right: 0; left: 0; text-align: center;
+                display: flex; flex-direction: row; overflow-x: auto; padding: 0 25px; gap: 25px; scrollbar-width: none;
+            }
+            .side-nav::-webkit-scrollbar { display: none; }
+            .nav-item { margin: 0; font-size: 10px; }
+            .swiper-slide { width: 75vw; height: 50vh; }
+            .project-modal { padding: 100px 25px; }
+            .close-btn { right: 25px; top: 35px; background: rgba(255,255,255,0.1); padding: 5px 12px; border-radius: 20px; }
+        }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(-5px); } to { opacity: 1; transform: translateY(0); } }
+    </style>
+</head>
+<body>
+
+<canvas id="thermalCanvas"></canvas>
+
+<div class="header-info" id="headerInfo">
+    <h1 onclick="toggleMobileInfo()">ZIGENG ZHANG <span class="mobile-info-btn" id="infoBtn">INFO</span></h1>
+    <div class="contact-box" id="contactBox">
+        > b.2003 artist & designer<br>
+        > tel: 13234341895<br>
+        > email: yamasakimikako@gmail.com<br>
+        > 2024-2026 archive
+    </div>
+</div>
+
+<div class="side-nav" id="sideNav"></div>
+
+<div class="main-container">
+    <div class="swiper mySwiper">
+        <div class="swiper-wrapper" id="swiperWrapper"></div>
+    </div>
+</div>
+
+<div class="project-modal" id="projectModal">
+    <div class="close-btn" onclick="closeModal()">[ RETURN_TO_ARCHIVE ]</div>
+    <div class="modal-body" id="modalBody"></div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
+<script>
+    /* 1. 项目数据：回归规律路径 + 同步最新描述 */
+    const projectData = [
+        { 
+            title: "Blank-被观看的时刻尚未发生", 
+            cover: "blank.png", 
+            meta: "Project 01 / Experimental Curation", // 来自最新截图
+            desc: "“Project 01 / Experimental Curation”\n“Blank——被观看的时刻尚未发生”是一场关于观看机制的临界状态实验。\n通过撤除阐释框架，本项目探讨了观看是如何被结构性地触发或阻断的，旨在邀请观众在意义的缝隙（裂口）中生成纯粹的个人经验。\n与此同时，艾伦卡普罗的《18场偶发艺术分6部分》为展览提供了灵感。作为一场偶然绝意的“坍缩”与白盒子展示，本场景将理解权与场域主体交给观众，策展人与创作者身份瓦解，不为秩序负责。",
+            images: ["p1_1.png", "p1_2.png", "p1_3.png", "p1_4.png", "p1_5.png", "p1_6.png", "p1_7.png", "p1_8.png", "p1_9.png"] // 回归规律路径
+        },
+        { 
+            title: "织造中国—高阳纺织 在地性艺术", 
+            cover: "gaoyang.png", 
+            meta: "Project 02 / Textile & Culture",
+            desc: "纺织产业 × 艺术设计 × 文化传播，一场以纺织为纽带的展览提案。",
+            images: ["p2_1.png", "p2_2.png", "p2_3.png", "p2_4.png", "p2_5.png", "p2_6.png", "p2_7.png", "p2_8.png"] 
+        },
+        { 
+            title: "鱼屿渔-北戴河村落改造项目", 
+            cover: "fish.png", 
+            meta: "Project 03 / Architecture",
+            desc: "城市化脚步不断加快，乡村建设不够完善，土地利用率不高，人口流失严重，部分村落急需建设规划。而在北戴河村落的建设中，更应重视传统文化的保护，在最大程度保留原汁原味乡土文化气息的同时进行村落复兴。",
+            images: ["p3_1.png", "p3_2.png", "p3_3.png", "p3_4.png", "p3_5.png", "p3_6.png", "p3_7.png", "p3_8.png", "p3_9.png"] 
+        },
+        { 
+            title: "栖居-人居空间设计项目", 
+            cover: "habitat.png", 
+            meta: "Project 04 / Spatial Design",
+            desc: "// 预留为空",
+            images: ["p4_1.png", "p4_2.png", "p4_3.png", "p4_4.png", "p4_5.png", "p4_6.png" , "p4_7.png"]
+        },
+        { 
+            title: "艺术创作展示", 
+            cover: "art.png", 
+            meta: "Project 05 / Visual Identity",
+            desc: "// 预留为空",
+            images: ["p5_1.png", "p5_2.png", "p5_3.png", "p5_4.png", "p5_5.png", "p5_6.png", "p5_7.png"] 
+        }
+    ];
+
+    /* 2. Swiper & 导航 */
+    const swiperWrapper = document.getElementById('swiperWrapper');
+    const sideNav = document.getElementById('sideNav');
+    projectData.forEach((p, i) => {
+        swiperWrapper.innerHTML += `<div class="swiper-slide" style="background-image:url('${p.cover}')" onclick="openModal(${i})"></div>`;
+        sideNav.innerHTML += `<div class="nav-item" id="nav-${i}" onclick="goToSlide(${i})">${p.title}</div>`;
+    });
+
+    var swiper = new Swiper(".mySwiper", {
+        effect: "coverflow", grabCursor: true, centeredSlides: true, slidesPerView: "auto",
+        loop: true, speed: 800, mousewheel: { thresholdDelta: 20 },
+        coverflowEffect: { rotate: 45, stretch: -160, depth: 700, modifier: 1, slideShadows: false },
+        on: {
+            slideChange: function () {
+                document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+                const activeNav = document.getElementById(`nav-${this.realIndex}`);
+                if (activeNav) {
+                    activeNav.classList.add('active');
+                    if(window.innerWidth <= 768) activeNav.scrollIntoView({ behavior: 'smooth', inline: 'center' });
+                }
+            }
+        }
+    });
+
+    function toggleMobileInfo() {
+        if(window.innerWidth > 768) return;
+        const header = document.getElementById('headerInfo');
+        header.classList.toggle('expanded');
+        document.getElementById('infoBtn').innerText = header.classList.contains('expanded') ? 'CLOSE' : 'INFO';
+    }
+
+    function goToSlide(index) { swiper.slideToLoop(index); }
+
+    /* 3. 详情弹窗逻辑（带骨架屏） */
+    function openModal(index) {
+        const p = projectData[index];
+        const modal = document.getElementById('projectModal');
+        const imgHtml = p.images.map(img => `
+            <div class="img-container">
+                <img src="${img}" onload="this.classList.add('loaded')" onerror="this.parentElement.style.display='none'">
+            </div>
+        `).join('');
+
+        document.getElementById('modalBody').innerHTML = `
+            <div class="project-meta">${p.meta}</div>
+            <h2>${p.title}</h2>
+            <div class="description">${p.desc}</div>
+            ${imgHtml}
+            <div style="height:150px;"></div>
+        `;
+        modal.style.display = 'block';
+        setTimeout(() => modal.classList.add('active'), 10);
+    }
+
+    function closeModal() {
+        const modal = document.getElementById('projectModal');
+        modal.classList.remove('active');
+        setTimeout(() => modal.style.display = 'none', 500);
+    }
+
+    /* 4. 手机端独占：红色温感模拟 (大小15) */
+    const canvas = document.getElementById('thermalCanvas');
+    const ctx = canvas.getContext('2d');
+    let width, height, heatPoints = [];
+
+    function resize() { width = window.innerWidth; height = window.innerHeight; canvas.width = width; canvas.height = height; }
+    window.addEventListener('resize', resize); resize();
+
+    function addHeat(x, y) {
+        if(window.innerWidth <= 768) {
+            heatPoints.push({ x, y, life: 1.0, radius: 15 }); // 严格大小 15
+        }
+    }
+    
+    window.addEventListener('touchmove', (e) => { 
+        for(let i=0; i<e.touches.length; i++) addHeat(e.touches[i].clientX, e.touches[i].clientY); 
+    }, {passive:true});
+    window.addEventListener('touchstart', (e) => { 
+        for(let i=0; i<e.touches.length; i++) addHeat(e.touches[i].clientX, e.touches[i].clientY); 
+    }, {passive:true});
+
+    function draw() {
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.15)'; 
+        ctx.fillRect(0, 0, width, height);
+
+        if(window.innerWidth <= 768) {
+            ctx.globalCompositeOperation = 'screen';
+            heatPoints.forEach((p) => {
+                let grad = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.radius * 2);
+                grad.addColorStop(0, `rgba(255, 60, 0, ${p.life * 0.7})`); // 经典红色
+                grad.addColorStop(1, 'rgba(0, 0, 0, 0)');
+                ctx.fillStyle = grad;
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+                ctx.fill();
+                p.life -= 0.03; 
+                p.radius += 0.2; 
+            });
+            heatPoints = heatPoints.filter(p => p.life > 0);
+            ctx.globalCompositeOperation = 'source-over';
+        }
+        requestAnimationFrame(draw);
+    }
+    draw();
+</script>
+</body>
+</html>

@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin</title>
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+<body>
+  <header class="site-header">
+    <div>
+      <h1 class="site-title">Admin Panel</h1>
+      <p class="site-subtitle">Supabase Content Manager</p>
+    </div>
+    <div class="header-actions">
+      <a class="admin-link" href="./index.html">View Site</a>
+      <button id="logoutBtn" class="ghost-btn" type="button">退出登录</button>
+    </div>
+  </header>
+
+  <main class="container admin-layout">
+    <section class="panel" id="authPanel">
+      <h2>登录</h2>
+      <form id="loginForm" class="form-grid">
+        <label>
+          <span>邮箱</span>
+          <input id="email" type="email" required />
+        </label>
+
+        <label>
+          <span>密码</span>
+          <input id="password" type="password" required />
+        </label>
+
+        <button class="primary-btn" type="submit">登录</button>
+      </form>
+    </section>
+
+    <section class="panel hidden" id="editorPanel">
+      <div class="panel-head">
+        <h2>新增 / 编辑模块</h2>
+        <button id="resetBtn" class="ghost-btn" type="button">新建空白</button>
+      </div>
+
+      <form id="blockForm" class="form-grid">
+        <input id="blockId" type="hidden" />
+
+        <label>
+          <span>模块类型</span>
+          <select id="blockType">
+            <option value="project">project</option>
+            <option value="archive">archive</option>
+            <option value="text">text</option>
+            <option value="hero">hero</option>
+          </select>
+        </label>
+
+        <label>
+          <span>slug</span>
+          <input id="slug" type="text" placeholder="project-001" required />
+        </label>
+
+        <label>
+          <span>标题</span>
+          <input id="title" type="text" required />
+        </label>
+
+        <label>
+          <span>副标题</span>
+          <input id="subtitle" type="text" />
+        </label>
+
+        <label>
+          <span>排序</span>
+          <input id="sortOrder" type="number" value="0" />
+        </label>
+
+        <label class="checkbox-row">
+          <input id="isPublished" type="checkbox" checked />
+          <span>发布</span>
+        </label>
+
+        <label class="full">
+          <span>正文</span>
+          <textarea id="body" rows="6"></textarea>
+        </label>
+
+        <label>
+          <span>封面图上传</span>
+          <input id="coverFile" type="file" accept="image/*" />
+        </label>
+
+        <label>
+          <span>已有封面 URL</span>
+          <input id="coverUrl" type="text" />
+        </label>
+
+        <label class="full">
+          <span>图片组上传（可多选）</span>
+          <input id="galleryFiles" type="file" accept="image/*" multiple />
+        </label>
+
+        <label class="full">
+          <span>图片组 URL（JSON 数组）</span>
+          <textarea id="galleryJson" rows="5">[]</textarea>
+        </label>
+
+        <div class="form-actions full">
+          <button class="primary-btn" type="submit">保存模块</button>
+        </div>
+      </form>
+    </section>
+
+    <section class="panel hidden" id="listPanel">
+      <div class="panel-head">
+        <h2>已有模块</h2>
+        <button id="refreshBtn" class="ghost-btn" type="button">刷新</button>
+      </div>
+      <div id="blockList" class="admin-list"></div>
+    </section>
+  </main>
+
+  <script type="module" src="./assets/admin.js"></script>
+</body>
+</html>

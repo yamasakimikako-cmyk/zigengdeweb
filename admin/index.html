@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>后台管理</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #111;
+      color: #fff;
+      padding: 24px;
+    }
+    .hidden { display: none; }
+    .panel {
+      background: #1b1b1b;
+      border: 1px solid #333;
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 20px;
+    }
+    input, textarea, select, button {
+      width: 100%;
+      box-sizing: border-box;
+      margin-top: 8px;
+      margin-bottom: 16px;
+      padding: 10px;
+      border-radius: 8px;
+      border: 1px solid #444;
+      background: #222;
+      color: #fff;
+    }
+    textarea { min-height: 120px; }
+    button {
+      cursor: pointer;
+      background: #fff;
+      color: #000;
+      font-weight: bold;
+    }
+    .row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+    .admin-card {
+      border: 1px solid #333;
+      border-radius: 10px;
+      padding: 16px;
+      margin-bottom: 14px;
+      background: #191919;
+    }
+    .admin-card-top {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      align-items: flex-start;
+    }
+    .admin-card-actions {
+      display: flex;
+      gap: 8px;
+    }
+    .admin-card-actions button {
+      width: auto;
+      margin: 0;
+      padding: 8px 12px;
+    }
+    .admin-thumb {
+      max-width: 240px;
+      margin-top: 12px;
+      border-radius: 8px;
+      display: block;
+    }
+    .admin-meta {
+      color: #aaa;
+      font-size: 12px;
+    }
+  </style>
+</head>
+<body>
+  <h1>网站后台</h1>
+
+  <section class="panel" id="authPanel">
+    <h2>登录</h2>
+    <form id="loginForm">
+      <label>邮箱</label>
+      <input id="email" type="email" required />
+      <label>密码</label>
+      <input id="password" type="password" required />
+      <button type="submit">登录</button>
+    </form>
+  </section>
+
+  <section class="panel hidden" id="editorPanel">
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;">
+      <h2>编辑内容</h2>
+      <button id="logoutBtn" style="width:auto;">退出登录</button>
+    </div>
+
+    <form id="blockForm">
+      <input id="blockId" type="hidden" />
+
+      <div class="row">
+        <div>
+          <label>模块类型</label>
+          <select id="blockType">
+            <option value="project">project</option>
+            <option value="page">page</option>
+            <option value="news">news</option>
+          </select>
+        </div>
+        <div>
+          <label>slug</label>
+          <input id="slug" type="text" />
+        </div>
+      </div>
+
+      <label>标题</label>
+      <input id="title" type="text" required />
+
+      <label>副标题</label>
+      <input id="subtitle" type="text" />
+
+      <div class="row">
+        <div>
+          <label>排序</label>
+          <input id="sortOrder" type="number" value="0" />
+        </div>
+        <div>
+          <label>是否发布</label>
+          <input id="isPublished" type="checkbox" checked />
+        </div>
+      </div>
+
+      <label>正文</label>
+      <textarea id="body"></textarea>
+
+      <label>封面图上传</label>
+      <input id="coverFile" type="file" accept="image/*" />
+
+      <label>封面图 URL</label>
+      <input id="coverUrl" type="text" />
+
+      <label>图片组上传</label>
+      <input id="galleryFiles" type="file" accept="image/*" multiple />
+
+      <label>图片组 JSON</label>
+      <textarea id="galleryJson">[]</textarea>
+
+      <div style="display:flex;gap:12px;">
+        <button type="submit">保存</button>
+        <button type="button" id="resetBtn">重置</button>
+      </div>
+    </form>
+  </section>
+
+  <section class="panel hidden" id="listPanel">
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;">
+      <h2>内容列表</h2>
+      <button id="refreshBtn" style="width:auto;">刷新</button>
+    </div>
+    <div id="blockList"></div>
+  </section>
+
+  <script type="module" src="./admin.js"></script>
+</body>
+</html>
